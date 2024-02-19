@@ -15,12 +15,12 @@ app.use(function (req, res, next) {
 });
 
 const path = {
-  users: '/api/users',
+  user: '/api/user',
   category: '/api/category',
   role: '/api/role',
 }
 
-app.use(path.users, require('./src/routes/user.route'));
+app.use(path.user, require('./src/routes/user.route'));
 app.use(path.category, require('./src/routes/category.route'));
 app.use(path.role, require('./src/routes/role.route'));
 
