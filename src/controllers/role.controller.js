@@ -1,7 +1,7 @@
 const { request, response } = require('express');
 const { pool } = require("../config/db");
 
-const createCategory = async (req = request, res = response) => {
+const createRole = async (req = request, res = response) => {
     try {
         const { name, description } = req.body;
 
@@ -10,28 +10,28 @@ const createCategory = async (req = request, res = response) => {
             return res.status(400).json({ message: 'Name and description are required' });
         }
 
-        // Insertar la nueva categoría en la base de datos
-        const [result] = await pool.query(
-            "INSERT INTO category (name, description) VALUES (?, ?);",
+        // Insertar el nuevo rol en la base de datos
+        await pool.query(
+            "INSERT INTO role (name, description) VALUES (?, ?);",
             [name, description]
         );
 
-        // Obtener la categoría recién creada
+        // Obtener el rol recién creado
         const [rows] = await pool.query(
-            "SELECT *, BIN_TO_UUID(category_id) category_id FROM category ORDER BY created_at DESC LIMIT 1;"
+            "SELECT *, BIN_TO_UUID(role_id) role_id FROM role ORDER BY created_at DESC LIMIT 1;"
         );
 
-        // Devolver la categoría creada
-        res.json({ message: 'Category created successfully', category: rows[0] });
+        // Devolver el rol creado
+        res.json({ message: 'Role created successfully', role: rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while querying the database' });
     }
 }
 
-const getCategories = async (req = request, res = response) => {
+const getRoles = async (req = request, res = response) => {
     try {
-        const [rows, fields] = await pool.query("SELECT *, BIN_TO_UUID(category_id) category_id FROM category;")
+        const [rows, fields] = await pool.query("SELECT *, BIN_TO_UUID(role_id) role_id FROM role;")
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -39,7 +39,7 @@ const getCategories = async (req = request, res = response) => {
     }
 }
 
-const setCategory = async (req = request, res = response) => {
+const setRole = async (req = request, res = response) => {
     try {
         const { id, name, description } = req.body;
 
@@ -49,7 +49,7 @@ const setCategory = async (req = request, res = response) => {
         }
 
         // Iniciar la consulta y los valores
-        let query = "UPDATE category SET ";
+        let query = "UPDATE role SET ";
         let values = [];
 
         // Añadir name a la consulta si está presente
@@ -64,28 +64,33 @@ const setCategory = async (req = request, res = response) => {
             values.push(description);
         }
 
-        // Quitar la última coma y añadir la cláusula WHERE
-        query = query.slice(0, -2) + " WHERE category_id = UUID_TO_BIN(?);";
+        // Eliminar la última coma y espacio
+        query = query.slice(0, -2);
+
+        // Añadir el id al array de valores
         values.push(id);
 
-        // Ejecutar la consulta
+        // Añadir el WHERE a la consulta
+        query += " WHERE role_id = UUID_TO_BIN(?);";
+
+        // Realizar la consulta
         await pool.query(query, values);
 
-        // Obtener la categoría actualizada
+        // Obtener el rol actualizado
         const [rows] = await pool.query(
-            "SELECT *, BIN_TO_UUID(category_id) category_id FROM category WHERE category_id = UUID_TO_BIN(?);",
+            "SELECT *, BIN_TO_UUID(role_id) role_id FROM role WHERE role_id = UUID_TO_BIN(?);",
             [id]
         );
 
-        // Devolver la categoría actualizada
-        res.json({ message: 'Category updated successfully', category: rows[0] });
+        // Devolver el rol actualizado
+        res.json({ message: 'Role updated successfully', role: rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while querying the database' });
     }
 }
 
-const changeStatusCategory = async (req = request, res = response) => {
+const changeStatusRole = async (req = request, res = response) => {
     try {
         const { id, status } = req.body;
 
@@ -95,18 +100,18 @@ const changeStatusCategory = async (req = request, res = response) => {
 
         // Ejecutar la consulta
         await pool.query(
-            "UPDATE category SET status = ? WHERE category_id = UUID_TO_BIN(?);",
+            "UPDATE role SET status = ? WHERE role_id = UUID_TO_BIN(?);",
             [status, id]
         );
 
-        // Obtener la categoría actualizada
+        // Obtener el rol actualizado
         const [rows] = await pool.query(
-            "SELECT *, BIN_TO_UUID(category_id) category_id FROM category WHERE category_id = UUID_TO_BIN(?);",
+            "SELECT *, BIN_TO_UUID(role_id) role_id FROM role WHERE role_id = UUID_TO_BIN(?);",
             [id]
         );
 
-        // Devolver la categoría actualizada
-        res.json({ message: 'Category updated successfully', category: rows[0] });
+        // Devolver el rol actualizado
+        res.json({ message: 'Role updated successfully', role: rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'An error occurred while querying the database' });
@@ -114,8 +119,8 @@ const changeStatusCategory = async (req = request, res = response) => {
 }
 
 module.exports = {
-    createCategory,
-    getCategories,
-    setCategory,
-    changeStatusCategory
-};
+    createRole,
+    getRoles,
+    setRole,
+    changeStatusRole
+}
