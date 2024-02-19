@@ -9,7 +9,7 @@ const {
 
 const router = Router();
 
-router.get('/createcategory', createCategory);
+router.post('/createcategory', createCategory);
 router.get('/getcategories', getCategories);
 router.post('/setcategory', setCategory);
 router.post('/statuscategory', changeStatusCategory);
