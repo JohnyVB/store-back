@@ -15,11 +15,15 @@ app.use(function (req, res, next) {
 });
 
 const path = {
+  auth: '/api/auth',
+  article: '/api/article',
   user: '/api/user',
   category: '/api/category',
   role: '/api/role',
 }
 
+app.use(path.auth, require('./src/routes/auth.route'));
+app.use(path.article, require('./src/routes/article.route'));
 app.use(path.user, require('./src/routes/user.route'));
 app.use(path.category, require('./src/routes/category.route'));
 app.use(path.role, require('./src/routes/role.route'));
