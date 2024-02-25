@@ -27,6 +27,7 @@ const path = {
   user: '/api/user',
   category: '/api/category',
   role: '/api/role',
+  income: '/api/income',
 }
 
 app.use(path.auth, require('./src/routes/auth.route'));
@@ -35,6 +36,7 @@ app.use(path.image_url, require('./src/routes/image_url.route'));
 app.use(path.user, require('./src/routes/user.route'));
 app.use(path.category, require('./src/routes/category.route'));
 app.use(path.role, require('./src/routes/role.route'));
+app.use(path.income, require('./src/routes/income.route'));
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on: " + process.env.PORT);

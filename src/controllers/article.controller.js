@@ -2,37 +2,34 @@ const { request, response } = require('express');
 const { pool } = require("../config/db");
 
 const createArticle = async (req = request, res = response) => {
+
+    const { categoryid, code, name, selling_price, stock, description } = req.body;
+
+    // Verificar si los elementos requeridos existen
+    if (!categoryid || !code || !name || !selling_price || !stock || !description) {
+        res.status(400).json({ error: "Faltan elementos requeridos en el cuerpo de la solicitud" });
+        return;
+    }
+
+    // Insertar el nuevo artículo en la base de datos
     try {
-        const { categoryid, code, name, selling_price, stock, description } = req.body;
+        await pool.query(
+            "INSERT INTO article (categoryid, code, name, selling_price, stock, description) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?);",
+            [categoryid, code, name, selling_price, stock, description]
+        );
 
-        // Verificar si los elementos requeridos existen
-        if (!categoryid || !code || !name || !selling_price || !stock || !description) {
-            res.status(400).json({ error: "Faltan elementos requeridos en el cuerpo de la solicitud" });
-            return;
-        }
+        // Obtener el artículo recién creado
+        const [rows] = await pool.query(
+            "SELECT *, BIN_TO_UUID(article_id) article_id, BIN_TO_UUID(categoryid) categoryid FROM article ORDER BY created_at DESC LIMIT 1;"
+        );
 
-        // Insertar el nuevo artículo en la base de datos
-        try {
-            await pool.query(
-                "INSERT INTO article (categoryid, code, name, selling_price, stock, description) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?);",
-                [categoryid, code, name, selling_price, stock, description]
-            );
-
-            // Obtener el artículo recién creado
-            const [rows] = await pool.query(
-                "SELECT *, BIN_TO_UUID(article_id) article_id, BIN_TO_UUID(categoryid) categoryid FROM article ORDER BY created_at DESC LIMIT 1;"
-            );
-
-            // Devolver el artículo creado
-            res.json({ message: 'Article created successfully', article: rows[0] });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Error al crear el artículo' });
-        }
+        // Devolver el artículo creado
+        res.json({ message: 'Article created successfully', article: rows[0] });
     } catch (error) {
         console.error(error);
-        res.status(400).json({ error });
+        res.status(500).json({ error: 'Error al crear el artículo' });
     }
+
 }
 
 const gerAllArticles = async (req = request, res = response) => {
