@@ -1,6 +1,6 @@
 const { request, response } = require('express');
 const { pool } = require("../config/db");
-const { uploadCloudinary } = require('../helpers/uploadCloudinary.helper');
+const { uploadCloudinary, updateCloudinary } = require('../helpers/handleCloudinary.helper');
 
 
 const createImageUrl = async (req = request, res = response) => {
@@ -14,11 +14,11 @@ const createImageUrl = async (req = request, res = response) => {
                 return res.json({ message: 'The image is not valid' });
             }
             try {
-                const { secure_url, thumbnailUrl } = await uploadCloudinary(fil);
+                const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(fil);
 
                 await pool.query(
-                    "INSERT INTO image_url (articleid, url, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?);",
-                    [articleid, secure_url, thumbnailUrl]
+                    "INSERT INTO image_url (articleid, url, public_id, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?, ?);",
+                    [articleid, secure_url, public_id.split('/')[2], thumbnailUrl]
                 );
 
             } catch (error) {
@@ -36,11 +36,11 @@ const createImageUrl = async (req = request, res = response) => {
     }
 
     try {
-        const { secure_url, thumbnailUrl } = await uploadCloudinary(file);
+        const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(file);
 
         await pool.query(
-            "INSERT INTO image_url (articleid, url, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?);",
-            [articleid, secure_url, thumbnailUrl]
+            "INSERT INTO image_url (articleid, url, public_id, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?, ?);",
+            [articleid, secure_url, public_id.split('/')[2], thumbnailUrl]
         );
 
     } catch (error) {
@@ -73,11 +73,10 @@ const setImageUrl = async (req = request, res = response) => {
         return res.json({ message: 'The image is not valid' });
     }
     try {
-        await cloudinary.uploader.destroy('store-back/article/' + publicid);
-        const { secure_url, public_id } = await cloudinary.uploader.upload(file.tempFilePath, { folder: 'store-back/article' });
+        const { secure_url, public_id, thumbnailUrl } = await updateCloudinary(file, publicid);
         await pool.query(
-            "UPDATE image_url SET url = ?, public_id = ? WHERE url_id = UUID_TO_BIN(?);",
-            [secure_url, public_id.split('/')[2], url_id]
+            "UPDATE image_url SET url = ?, public_id = ?, thumbnail = ? WHERE url_id = UUID_TO_BIN(?);",
+            [secure_url, public_id.split('/')[2], thumbnailUrl, url_id]
         );
         res.json({ message: 'Image uploaded successfully' });
     } catch (error) {
