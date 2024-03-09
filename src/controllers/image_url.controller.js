@@ -1,6 +1,6 @@
 const { request, response } = require('express');
 const { pool } = require("../config/db");
-const { uploadCloudinary, updateCloudinary } = require('../helpers/handleCloudinary.helper');
+const { uploadCloudinary, updateCloudinary, deleteCloudinary } = require('../helpers/handleCloudinary.helper');
 
 
 const createImageUrl = async (req = request, res = response) => {
@@ -14,7 +14,7 @@ const createImageUrl = async (req = request, res = response) => {
                 return res.json({ message: 'The image is not valid' });
             }
             try {
-                const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(fil);
+                const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(fil, 'store-back/article');
 
                 await pool.query(
                     "INSERT INTO image_url (articleid, url, public_id, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?, ?);",
@@ -36,7 +36,7 @@ const createImageUrl = async (req = request, res = response) => {
     }
 
     try {
-        const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(file);
+        const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(file, 'store-back/article');
 
         await pool.query(
             "INSERT INTO image_url (articleid, url, public_id, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?, ?);",
@@ -73,7 +73,7 @@ const setImageUrl = async (req = request, res = response) => {
         return res.json({ message: 'The image is not valid' });
     }
     try {
-        const { secure_url, public_id, thumbnailUrl } = await updateCloudinary(file, publicid);
+        const { secure_url, public_id, thumbnailUrl } = await updateCloudinary(file, publicid, 'store-back/article');
         await pool.query(
             "UPDATE image_url SET url = ?, public_id = ?, thumbnail = ? WHERE url_id = UUID_TO_BIN(?);",
             [secure_url, public_id.split('/')[2], thumbnailUrl, url_id]
@@ -85,8 +85,24 @@ const setImageUrl = async (req = request, res = response) => {
     }
 }
 
+const deleteImageUrl = async (req = request, res = response) => {
+    const { url_id, publicid } = req.body;
+    try {
+        await pool.query(
+            "DELETE FROM image_url WHERE url_id = UUID_TO_BIN(?);",
+            [url_id]
+        );
+        await deleteCloudinary(publicid, 'store-back/article');
+        res.json({ message: 'Image deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Error deleting image' });
+    }
+}
+
 module.exports = {
     createImageUrl,
     getImagesByArticle,
-    setImageUrl
+    setImageUrl,
+    deleteImageUrl,
 }

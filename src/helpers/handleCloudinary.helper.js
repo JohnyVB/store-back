@@ -1,11 +1,11 @@
 const cloudinary = require('../config/cloudinary');
 
-const uploadCloudinary = async (file) => {
+const uploadCloudinary = async (file, folder) => {
     try {
-        const { secure_url, public_id } = await cloudinary.uploader.upload(file.tempFilePath, { folder: 'store-back/article' });
+        const { secure_url, public_id } = await cloudinary.uploader.upload(file.tempFilePath, { folder });
 
         const thumbnailUrl = await new Promise((resolve, reject) => {
-            const thumbnailUrl = cloudinary.url(public_id, { width: 150, height: 150, crop: 'fill' });
+            const thumbnailUrl = cloudinary.url(public_id, { width: folder.includes('gallery') ? 300 : 150, height: 150, crop: 'fill' });
             if (thumbnailUrl) {
                 resolve(thumbnailUrl);
             } else {
@@ -24,12 +24,12 @@ const uploadCloudinary = async (file) => {
     }
 }
 
-const updateCloudinary = async (file, publicid) => {
+const updateCloudinary = async (file, publicid, folder) => {
     try {
-        await cloudinary.uploader.destroy('store-back/article/' + publicid);
-        const { secure_url, public_id } = await cloudinary.uploader.upload(file.tempFilePath, { folder: 'store-back/article' });
+        await deleteCloudinary(publicid, folder);
+        const { secure_url, public_id } = await cloudinary.uploader.upload(file.tempFilePath, { folder });
         const thumbnailUrl = await new Promise((resolve, reject) => {
-            const thumbnailUrl = cloudinary.url(public_id, { width: 150, height: 150, crop: 'fill' });
+            const thumbnailUrl = cloudinary.url(public_id, { width: folder.includes('gallery') ? 300 : 150, height: 150, crop: 'fill' });
             if (thumbnailUrl) {
                 resolve(thumbnailUrl);
             } else {
@@ -45,10 +45,20 @@ const updateCloudinary = async (file, publicid) => {
     } catch (error) {
         console.error(error);
         throw new Error('Error uploading images');
+    }
+}
+
+const deleteCloudinary = async (publicid, folder) => {
+    try {
+        await cloudinary.uploader.destroy(`${folder}/` + publicid);
+    } catch (error) {
+        console.error(error);
+        throw new Error('Error deleting image');
     }
 }
 
 module.exports = {
     uploadCloudinary,
     updateCloudinary,
+    deleteCloudinary
 }
