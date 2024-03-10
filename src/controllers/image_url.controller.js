@@ -10,7 +10,7 @@ const createImageUrl = async (req = request, res = response) => {
     if (Array.isArray(file)) {
         file.forEach(async (fil) => {
             const type = fil.mimetype.split('/')[1];
-            if (type !== 'png' && type !== 'jpg' && type !== 'jpeg') {
+            if (type !== 'png' && type !== 'jpg' && type !== 'jpeg' && type !== 'webp') {
                 return res.json({ message: 'The image is not valid' });
             }
             try {
@@ -31,7 +31,7 @@ const createImageUrl = async (req = request, res = response) => {
     }
 
     const type = file.mimetype.split('/')[1];
-    if (type !== 'png' && type !== 'jpg' && type !== 'jpeg') {
+    if (type !== 'png' && type !== 'jpg' && type !== 'jpeg' && type !== 'webp') {
         return res.json({ message: 'The image is not valid' });
     }
 
