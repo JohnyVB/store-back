@@ -38,10 +38,11 @@ const gerAllArticles = async (req = request, res = response) => {
         const [rows] = await pool.query(
             `
             SELECT
-            BIN_TO_UUID(article_id) article_id, 
-            category.name as category,
+            BIN_TO_UUID(article_id) AS article_id,
+            category.name AS category,
             article.code,
             article.name,
+            image_url.url as image_url,
             article.selling_price,
             article.stock,
             article.description,
@@ -49,9 +50,16 @@ const gerAllArticles = async (req = request, res = response) => {
             article.created_at
             FROM article
             INNER JOIN category ON article.categoryid = category.category_id
+            INNER JOIN (
+            SELECT *
+            FROM image_url
+            WHERE image_url.main = 1
+            ) AS image_url ON article.article_id = image_url.articleid
             WHERE article.status = 1;
             `
         );
+
+
 
         // Devolver los artículos
         res.json(rows);

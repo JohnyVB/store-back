@@ -8,7 +8,7 @@ const createImageUrl = async (req = request, res = response) => {
     const { file } = req.files;
 
     if (Array.isArray(file)) {
-        file.forEach(async (fil) => {
+        file.forEach(async (fil, index) => {
             const type = fil.mimetype.split('/')[1];
             if (type !== 'png' && type !== 'jpg' && type !== 'jpeg' && type !== 'webp') {
                 return res.json({ message: 'The image is not valid' });
@@ -17,8 +17,8 @@ const createImageUrl = async (req = request, res = response) => {
                 const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(fil, 'store-back/article');
 
                 await pool.query(
-                    "INSERT INTO image_url (articleid, url, public_id, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?, ?);",
-                    [articleid, secure_url, public_id.split('/')[2], thumbnailUrl]
+                    "INSERT INTO image_url (articleid, url, public_id, thumbnail, main) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?);",
+                    [articleid, secure_url, public_id.split('/')[2], thumbnailUrl, index + 1]
                 );
 
             } catch (error) {
@@ -38,9 +38,16 @@ const createImageUrl = async (req = request, res = response) => {
     try {
         const { secure_url, public_id, thumbnailUrl } = await uploadCloudinary(file, 'store-back/article');
 
+        const images = await pool.query(
+            "SELECT * FROM image_url WHERE articleid = UUID_TO_BIN(?);",
+            [articleid]
+        );
+
+        const main = images[0].length + 1;
+
         await pool.query(
-            "INSERT INTO image_url (articleid, url, public_id, thumbnail) VALUES (UUID_TO_BIN(?), ?, ?, ?);",
-            [articleid, secure_url, public_id.split('/')[2], thumbnailUrl]
+            "INSERT INTO image_url (articleid, url, public_id, thumbnail, main) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?);",
+            [articleid, secure_url, public_id.split('/')[2], thumbnailUrl, main]
         );
 
     } catch (error) {
